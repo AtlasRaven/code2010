@@ -2,10 +2,156 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=d, initial-scale=1.0" />
-    <title>Web đầu tiên</title>
-    <link rel="stylesheet" href="./styles.css" />
-    <script src="./script.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic Tac Toe 10x10</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #2f2727;
+        color: white;
+      }
+
+      #board {
+        display: grid;
+        grid-template-columns: repeat(10, 40px);
+        grid-template-rows: repeat(10, 40px);
+        gap: 2px;
+        margin: 20px auto;
+        width: max-content;
+      }
+      .cell {
+        width: 40px;
+        height: 40px;
+        background: #871414;
+        font-size: 24px;
+        text-align: center;
+        line-height: 40px;
+        cursor: pointer;
+        border: 1px solid #79588e;
+      }
+      #status {
+        text-align: center;
+        margin-top: 10px;
+        font-size: 18px;
+      }
+      #controls {
+        text-align: center;
+        margin-top: 10px;
+      }
+      button {
+        margin: 5px;
+        padding: 8px 15px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 5px;
+        border: none;
+        background: #444;
+        color: white;
+      }
+      button:hover {
+        background: #666;
+      }
+    </style>
   </head>
-  <body></body>
+  <body>
+    <div id="board"></div>
+    <div id="status">Player X's turn</div>
+    <div id="controls">
+      <button onclick="resetGame()">Reset</button>
+      <button onclick="undoMove()">Undo</button>
+    </div>
+
+    <script>
+      const size = 10;
+      let board, currentPlayer, gameOver, history;
+      const boardDiv = document.getElementById("board");
+      const statusDiv = document.getElementById("status");
+
+      function initGame() {
+        board = Array.from({ length: size }, () => Array(size).fill(""));
+        currentPlayer = "X";
+        gameOver = false;
+        history = [];
+        renderBoard();
+        statusDiv.textContent = "Player X's turn";
+      }
+
+      function renderBoard() {
+        boardDiv.innerHTML = "";
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.textContent = board[i][j];
+            cell.onclick = () => handleMove(i, j);
+            boardDiv.appendChild(cell);
+          }
+        }
+      }
+
+      function handleMove(i, j) {
+        if (gameOver || board[i][j]) return;
+        board[i][j] = currentPlayer;
+        history.push([i, j]); // lưu lịch sử
+        renderBoard();
+        if (checkWin(i, j)) {
+          statusDiv.textContent = `Player ${currentPlayer} wins!`;
+          gameOver = true;
+          setTimeout(() => resetGame(), 2000); // tự reset sau 2s
+        } else if (board.flat().every((cell) => cell)) {
+          statusDiv.textContent = "It's a draw!";
+          gameOver = true;
+          setTimeout(() => resetGame(), 2000);
+        } else {
+          currentPlayer = currentPlayer === "X" ? "O" : "X";
+          statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+        }
+      }
+
+      // Check for 5 in a row (horizontal, vertical, diagonal)
+      function checkWin(x, y) {
+        const directions = [
+          [0, 1],
+          [1, 0],
+          [1, 1],
+          [1, -1],
+        ];
+        for (const [dx, dy] of directions) {
+          let count = 1;
+          for (let dir = -1; dir <= 1; dir += 2) {
+            let nx = x + dx * dir,
+              ny = y + dy * dir;
+            while (
+              nx >= 0 &&
+              nx < size &&
+              ny >= 0 &&
+              ny < size &&
+              board[nx][ny] === currentPlayer
+            ) {
+              count++;
+              nx += dx * dir;
+              ny += dy * dir;
+            }
+          }
+          if (count >= 5) return true;
+        }
+        return false;
+      }
+
+      function resetGame() {
+        initGame();
+      }
+
+      function undoMove() {
+        if (history.length === 0 || gameOver) return;
+        const [i, j] = history.pop();
+        board[i][j] = "";
+        currentPlayer = currentPlayer === "X" ? "O" : "X"; // quay lại lượt trước
+        statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+        renderBoard();
+      }
+
+      initGame();
+    </script>
+  </body>
 </html>
